@@ -1,7 +1,0 @@
-# TODO Application Repository
-
-This repository contains a small Python command-line TODO application. Install dependencies with `pip install -r requirements.txt`, run commands such as `python todo.py add "Buy milk"` or `python todo.py list`, and execute the automated test suite with `pytest`.
-
-## Additional Documentation
-
-- [PropOps AI (Kenya Edition) Strategic Overview](docs/propops_ai_plan.md): Strategic plan for Perlin Ventures' PropOps AI platform focused on Kenyan landlords and Airbnb hosts.
