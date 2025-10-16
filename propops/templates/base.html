@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title or app_name }}</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+      .bg-grid {
+        background-image: radial-gradient(
+          rgba(148, 163, 184, 0.08) 1px,
+          transparent 0
+        );
+        background-size: 20px 20px;
+      }
+    </style>
+  </head>
+  <body class="h-full bg-slate-950 text-slate-100">
+    <div class="min-h-full bg-grid">
+      <header class="border-b border-slate-800 bg-slate-950/70 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+          <div class="flex items-center gap-3">
+            <span
+              class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="h-6 w-6"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M11.47 3.133a.75.75 0 0 1 1.06 0l8.336 8.336a.75.75 0 0 1 0 1.06l-8.336 8.337a.75.75 0 0 1-1.06 0L3.133 12.53a.75.75 0 0 1 0-1.06l8.336-8.337Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </span>
+            <div>
+              <p class="text-sm uppercase tracking-widest text-emerald-400">
+                Perlin Ventures
+              </p>
+              <h1 class="text-xl font-semibold text-white">{{ app_name }}</h1>
+            </div>
+          </div>
+          <div class="hidden items-center gap-6 text-sm font-medium text-slate-300 md:flex">
+            <a href="#operations" class="hover:text-white">Operations</a>
+            <a href="#compliance" class="hover:text-white">Compliance</a>
+            <a href="#automation" class="hover:text-white">Automation</a>
+          </div>
+          <a
+            href="https://propops.ai"
+            class="hidden rounded-full border border-emerald-500/40 px-4 py-2 text-sm font-semibold text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200 md:block"
+          >
+            propops.ai
+          </a>
+        </div>
+      </header>
+      <main class="mx-auto max-w-7xl px-6 py-10">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="mb-6 space-y-2">
+              {% for category, message in messages %}
+                <div
+                  class="rounded-lg border px-4 py-3 text-sm shadow-sm {{ 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100' if category == 'success' else 'border-rose-500/40 bg-rose-500/10 text-rose-100' }}"
+                >
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+      </main>
+      <footer class="border-t border-slate-800 bg-slate-950/80 py-6 text-center text-xs text-slate-500">
+        Built for Kenyan landlords & Airbnb hosts · Powered by Perlin Ventures
+      </footer>
+    </div>
+  </body>
+</html>

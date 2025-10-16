@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mb-10">
+  <h2 class="mb-4 text-lg font-semibold text-white">Portfolio Pulse</h2>
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5">
+      <p class="text-sm uppercase tracking-wide text-emerald-300">Active Tenants</p>
+      <p class="mt-3 text-3xl font-semibold text-white">{{ summary.tenants }}</p>
+    </div>
+    <div class="rounded-2xl border border-emerald-500/20 bg-slate-900/80 p-5">
+      <p class="text-sm uppercase tracking-wide text-slate-300">Monthly Rent Roll</p>
+      <p class="mt-3 text-3xl font-semibold text-white">KES {{ '%.0f'|format(summary.monthly_rent_roll or 0) }}</p>
+    </div>
+    <div class="rounded-2xl border border-emerald-500/20 bg-slate-900/80 p-5">
+      <p class="text-sm uppercase tracking-wide text-slate-300">Airbnb Units</p>
+      <p class="mt-3 text-3xl font-semibold text-white">{{ summary.airbnb_units }}</p>
+    </div>
+    <div class="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5">
+      <p class="text-sm uppercase tracking-wide text-rose-200">Outstanding Rent</p>
+      <p class="mt-3 text-3xl font-semibold text-white">KES {{ '%.0f'|format(summary.outstanding or 0) }}</p>
+    </div>
+  </div>
+</section>
+
+<div class="grid gap-10 lg:grid-cols-3">
+  <div class="space-y-10 lg:col-span-2">
+    <section id="operations" class="rounded-3xl border border-slate-800/80 bg-slate-900/50 p-6 shadow-xl shadow-slate-950/30">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-white">Operations</h3>
+        <span class="text-xs uppercase tracking-wide text-slate-400">Properties · Tenants · Rent</span>
+      </div>
+      <div class="mt-6 space-y-6">
+        <div>
+          <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-400">Properties</h4>
+          <div class="mt-3 grid gap-3 md:grid-cols-2">
+            {% for property in properties %}
+              <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                <div class="flex items-center justify-between">
+                  <p class="text-base font-semibold text-white">{{ property.name }}</p>
+                  <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">{{ property.category }}</span>
+                </div>
+                <p class="mt-2 text-sm text-slate-400">{{ property.location }} · {{ property.units }} units</p>
+              </div>
+            {% else %}
+              <p class="rounded-2xl border border-dashed border-slate-700 p-6 text-sm text-slate-400">No properties yet. Add one from the panel on the right.</p>
+            {% endfor %}
+          </div>
+        </div>
+        <div>
+          <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-400">Tenants & Guests</h4>
+          <div class="mt-3 grid gap-3 md:grid-cols-2">
+            {% for tenant in tenants %}
+              <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                <p class="text-base font-semibold text-white">{{ tenant.full_name }}</p>
+                <p class="mt-1 text-sm text-slate-400">KES {{ '%.0f'|format(tenant.monthly_rent) }} · {{ 'Airbnb' if tenant.is_airbnb else 'Long-term' }}</p>
+                <p class="mt-1 text-xs text-slate-500">Lease start: {{ tenant.lease_start.strftime('%d %b %Y') }}</p>
+              </div>
+            {% else %}
+              <p class="rounded-2xl border border-dashed border-slate-700 p-6 text-sm text-slate-400">No tenants yet. Capture your first lease with the form on the right.</p>
+            {% endfor %}
+          </div>
+        </div>
+        <div>
+          <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-400">Outstanding Invoices</h4>
+          <div class="mt-3 overflow-hidden rounded-2xl border border-slate-800">
+            <table class="min-w-full divide-y divide-slate-800/60 text-sm">
+              <thead class="bg-slate-900/80 text-slate-300">
+                <tr>
+                  <th class="px-4 py-3 text-left">Tenant</th>
+                  <th class="px-4 py-3 text-left">Due date</th>
+                  <th class="px-4 py-3 text-left">Amount</th>
+                  <th class="px-4 py-3 text-left">Status</th>
+                  <th class="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                {% for invoice in invoices %}
+                  <tr class="hover:bg-slate-900/60">
+                    {% set tenant = tenant_lookup.get(invoice.tenant_id) %}
+                    <td class="px-4 py-3">{{ tenant.full_name if tenant else ('Tenant #' ~ invoice.tenant_id) }}</td>
+                    <td class="px-4 py-3">{{ invoice.due_date.strftime('%d %b %Y') }}</td>
+                    <td class="px-4 py-3">KES {{ '%.0f'|format(invoice.amount) }}</td>
+                    <td class="px-4 py-3 text-rose-300">{{ invoice.status|capitalize }}</td>
+                    <td class="px-4 py-3 text-right">
+                      <form method="post" action="{{ url_for('mark_invoice_paid', invoice_id=invoice.id) }}">
+                        <button class="rounded-full border border-emerald-500/30 px-3 py-1 text-xs text-emerald-200 transition hover:border-emerald-400 hover:text-emerald-100">
+                          Mark paid
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td class="px-4 py-5 text-center text-slate-400" colspan="5">All caught up on rent collection.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="compliance" class="rounded-3xl border border-slate-800/80 bg-slate-900/50 p-6 shadow-xl shadow-slate-950/30">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-white">Compliance Radar</h3>
+        <span class="text-xs uppercase tracking-wide text-slate-400">KRA · NEMA · Lease admin</span>
+      </div>
+      <div class="mt-6 overflow-hidden rounded-2xl border border-slate-800">
+        <table class="min-w-full divide-y divide-slate-800/60 text-sm">
+          <thead class="bg-slate-900/80 text-slate-300">
+            <tr>
+              <th class="px-4 py-3 text-left">Task</th>
+              <th class="px-4 py-3 text-left">Category</th>
+              <th class="px-4 py-3 text-left">Due</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60">
+            {% for task in compliance %}
+              <tr class="hover:bg-slate-900/60">
+                <td class="px-4 py-3">{{ task.title }}</td>
+                <td class="px-4 py-3">{{ task.category }}</td>
+                <td class="px-4 py-3">{{ task.due_date.strftime('%d %b %Y') }}</td>
+                <td class="px-4 py-3 text-right">
+                  <form method="post" action="{{ url_for('complete_compliance', task_id=task.id) }}">
+                    <button class="rounded-full border border-emerald-500/30 px-3 py-1 text-xs text-emerald-200 transition hover:border-emerald-400 hover:text-emerald-100">
+                      Complete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td class="px-4 py-5 text-center text-slate-400" colspan="4">No open compliance actions.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="automation" class="rounded-3xl border border-slate-800/80 bg-slate-900/50 p-6 shadow-xl shadow-slate-950/30">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-white">Automation Queue</h3>
+        <span class="text-xs uppercase tracking-wide text-slate-400">SMS · WhatsApp · Email</span>
+      </div>
+      <div class="mt-6 space-y-4">
+        {% for message in messages %}
+          <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+            <div class="flex items-center justify-between text-xs uppercase tracking-wide text-slate-400">
+              <span>{{ message.channel }}</span>
+              <span>{{ message.send_at.strftime('%d %b %Y %H:%M') }}</span>
+            </div>
+            <p class="mt-2 text-sm font-medium text-white">{{ message.template }}</p>
+            <p class="mt-1 text-xs text-slate-500">To: {{ message.recipient }}</p>
+          </div>
+        {% else %}
+          <p class="rounded-2xl border border-dashed border-slate-700 p-6 text-sm text-slate-400">No scheduled reminders. Automate your rent follow-ups from the panel on the right.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <aside class="space-y-8">
+    <div class="rounded-3xl border border-emerald-500/30 bg-slate-900/70 p-6 shadow-xl shadow-emerald-900/40">
+      <h3 class="text-lg font-semibold text-white">Add Property</h3>
+      <form method="post" action="{{ url_for('create_property') }}" class="mt-5 space-y-4 text-sm">
+        <div>
+          <label class="mb-1 block text-slate-300">Name</label>
+          <input name="name" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="Kilimani Suites" />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Category</label>
+          <input name="category" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="Airbnb / Long-term" />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Location</label>
+          <input name="location" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="Nairobi" />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Units</label>
+          <input name="units" type="number" min="1" value="1" class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" />
+        </div>
+        <button class="w-full rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">Save property</button>
+      </form>
+    </div>
+
+    <div class="rounded-3xl border border-emerald-500/20 bg-slate-900/70 p-6 shadow-xl shadow-slate-950/40">
+      <h3 class="text-lg font-semibold text-white">Add Tenant / Guest</h3>
+      <form method="post" action="{{ url_for('create_tenant') }}" class="mt-5 space-y-4 text-sm">
+        <div>
+          <label class="mb-1 block text-slate-300">Property</label>
+          <select name="property_id" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2">
+            <option value="" disabled selected>Select property</option>
+            {% for property in properties %}
+              <option value="{{ property.id }}">{{ property.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Full name</label>
+          <input name="full_name" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="Amina Wanjiru" />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Contact</label>
+          <input name="contact" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="+2547..." />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Lease start</label>
+          <input name="lease_start" type="date" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Lease end (optional)</label>
+          <input name="lease_end" type="date" class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Monthly rent</label>
+          <input name="monthly_rent" type="number" step="0.01" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" />
+        </div>
+        <label class="flex items-center gap-2 text-xs text-slate-400">
+          <input name="is_airbnb" type="checkbox" class="rounded border-slate-600 bg-slate-900" />
+          Airbnb guest profile
+        </label>
+        <button class="w-full rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">Save tenant</button>
+      </form>
+    </div>
+
+    <div class="rounded-3xl border border-emerald-500/20 bg-slate-900/70 p-6 shadow-xl shadow-slate-950/40">
+      <h3 class="text-lg font-semibold text-white">Create Invoice</h3>
+      <form method="post" action="{{ url_for('create_invoice') }}" class="mt-5 space-y-4 text-sm">
+        <div>
+          <label class="mb-1 block text-slate-300">Tenant</label>
+          <select name="tenant_id" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2">
+            <option value="" disabled selected>Select tenant</option>
+            {% for tenant in tenants %}
+              <option value="{{ tenant.id }}">{{ tenant.full_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Amount (KES)</label>
+          <input name="amount" type="number" step="0.01" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Due date</label>
+          <input name="due_date" type="date" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" />
+        </div>
+        <button class="w-full rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">Create invoice</button>
+      </form>
+    </div>
+
+    <div class="rounded-3xl border border-slate-800/70 bg-slate-900/70 p-6 shadow-xl shadow-slate-950/40">
+      <h3 class="text-lg font-semibold text-white">Log Maintenance</h3>
+      <form method="post" action="{{ url_for('create_maintenance') }}" class="mt-5 space-y-4 text-sm">
+        <div>
+          <label class="mb-1 block text-slate-300">Property</label>
+          <select name="property_id" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2">
+            <option value="" disabled selected>Select property</option>
+            {% for property in properties %}
+              <option value="{{ property.id }}">{{ property.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Description</label>
+          <textarea name="description" rows="3" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="Fix leaking tap in unit 3A"></textarea>
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Vendor (optional)</label>
+          <input name="vendor" class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="MajiFix" />
+        </div>
+        <button class="w-full rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">Log maintenance</button>
+      </form>
+    </div>
+
+    <div class="rounded-3xl border border-slate-800/70 bg-slate-900/70 p-6 shadow-xl shadow-slate-950/40">
+      <h3 class="text-lg font-semibold text-white">Schedule Reminder</h3>
+      <form method="post" action="{{ url_for('schedule_message') }}" class="mt-5 space-y-4 text-sm">
+        <div>
+          <label class="mb-1 block text-slate-300">Channel</label>
+          <input name="channel" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="WhatsApp" />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Recipient</label>
+          <input name="recipient" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="+2547..." />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Message</label>
+          <textarea name="template" rows="3" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="Rent reminder"></textarea>
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Send at</label>
+          <input name="send_at" type="datetime-local" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" />
+        </div>
+        <button class="w-full rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">Schedule message</button>
+      </form>
+    </div>
+
+    <div class="rounded-3xl border border-slate-800/70 bg-slate-900/70 p-6 shadow-xl shadow-slate-950/40">
+      <h3 class="text-lg font-semibold text-white">Add Compliance Task</h3>
+      <form method="post" action="{{ url_for('create_compliance') }}" class="mt-5 space-y-4 text-sm">
+        <div>
+          <label class="mb-1 block text-slate-300">Title</label>
+          <input name="title" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="Submit KRA return" />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Category</label>
+          <input name="category" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" placeholder="KRA / NEMA" />
+        </div>
+        <div>
+          <label class="mb-1 block text-slate-300">Due date</label>
+          <input name="due_date" type="date" required class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2" />
+        </div>
+        <button class="w-full rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">Add task</button>
+      </form>
+    </div>
+  </aside>
+</div>
+{% endblock %}
